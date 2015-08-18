@@ -16,11 +16,11 @@ public final class ImageSet {
 			return null;
 		}
 		
-		final int length = TileConstants.ALL_TILE_STRATEGYS.length;
+		final int length = TileConstants.ALL_TILE_STRATEGIES.length;
 		final BufferedImage[] images = new BufferedImage[length];
 		
 		for (int i = 0; i < length; i++) {
-			final ITileStrategy strategy = TileConstants.ALL_TILE_STRATEGYS[i];
+			final ITileStrategy strategy = TileConstants.ALL_TILE_STRATEGIES[i];
 			final BufferedImage image = strategy.generate(base, vertical, horizontal, innerMask, outerMask);
 			
 			images[i] = image;

@@ -1,21 +1,26 @@
 package de.sogomn.generator.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import de.sogomn.generator.ImageSet;
@@ -29,9 +34,16 @@ public final class TileDialog {
 	private JButton chooseBase, chooseVertical, chooseHorizontal;
 	private JButton generate;
 	
+	private JPanel previewPanel;
+	
 	private JFileChooser fileChooser;
 	
 	private ImageSet imageSet;
+	
+	private long resizeTimer;
+	
+	private static final int PREVIEW_PADDING = 35;
+	private static final int RESIZE_INTERVAL = 500;
 	
 	public TileDialog() {
 		frame = new JFrame();
@@ -42,42 +54,44 @@ public final class TileDialog {
 		chooseVertical = new JButton("Choose vertical");
 		chooseHorizontal = new JButton("Choose horizontal");
 		generate = new JButton("Generate");
+		previewPanel = new JPanel();
 		fileChooser = new JFileChooser();
 		imageSet = new ImageSet();
-		
-		final JPanel panel = addComponents();
 		
 		chooseBase.addActionListener(a -> {
 			final BufferedImage image = chooseImage();
 			
 			if (image != null) {
-				final Image smallImage = image.getScaledInstance(previewBase.getWidth(), previewBase.getHeight(), BufferedImage.SCALE_FAST);
-				final ImageIcon icon = new ImageIcon(smallImage);
+				final ImageIcon icon = new ImageIcon(image);
 				
 				imageSet.setBase(image);
 				previewBase.setIcon(icon);
+				
+				resizePreviews();
 			}
 		});
 		chooseVertical.addActionListener(a -> {
 			final BufferedImage image = chooseImage();
 			
 			if (image != null) {
-				final Image smallImage = image.getScaledInstance(previewVertical.getWidth(), previewVertical.getHeight(), BufferedImage.SCALE_FAST);
-				final ImageIcon icon = new ImageIcon(smallImage);
+				final ImageIcon icon = new ImageIcon(image);
 				
 				imageSet.setVertical(image);
 				previewVertical.setIcon(icon);
+				
+				resizePreviews();
 			}
 		});
 		chooseHorizontal.addActionListener(a -> {
 			final BufferedImage image = chooseImage();
 			
 			if (image != null) {
-				final Image smallImage = image.getScaledInstance(previewHorizontal.getWidth(), previewHorizontal.getHeight(), BufferedImage.SCALE_FAST);
-				final ImageIcon icon = new ImageIcon(smallImage);
+				final ImageIcon icon = new ImageIcon(image);
 				
 				imageSet.setHorizontal(image);
 				previewHorizontal.setIcon(icon);
+				
+				resizePreviews();
 			}
 		});
 		generate.addActionListener(a -> {
@@ -88,26 +102,101 @@ public final class TileDialog {
 				
 				if (folder != null) {
 					writeImages(images, folder);
+					
+					alert("Tiles saved!");
 				}
 			}
 		});
 		
-		previewBase.setPreferredSize(new Dimension(100, 100));
+		previewBase.setPreferredSize(new Dimension(150, 150));
+		previewBase.setMinimumSize(new Dimension(150, 150));
+		previewBase.setMaximumSize(new Dimension(150, 150));
 		previewBase.setHorizontalAlignment(JLabel.CENTER);
-		previewVertical.setPreferredSize(new Dimension(100, 100));
-		previewVertical.setHorizontalAlignment(JLabel.CENTER);
-		previewHorizontal.setPreferredSize(new Dimension(100, 100));
-		previewHorizontal.setHorizontalAlignment(JLabel.CENTER);
+		previewBase.setBorder(new LineBorder(Color.GRAY, 2, true));
 		
-		frame.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		previewVertical.setPreferredSize(new Dimension(150, 150));
+		previewVertical.setMinimumSize(new Dimension(150, 150));
+		previewVertical.setMaximumSize(new Dimension(150, 150));
+		previewVertical.setHorizontalAlignment(JLabel.CENTER);
+		previewVertical.setBorder(new LineBorder(Color.GRAY, 2, true));
+		
+		previewHorizontal.setPreferredSize(new Dimension(150, 150));
+		previewHorizontal.setMinimumSize(new Dimension(150, 150));
+		previewHorizontal.setMaximumSize(new Dimension(150, 150));
+		previewHorizontal.setHorizontalAlignment(JLabel.CENTER);
+		previewHorizontal.setBorder(new LineBorder(Color.GRAY, 2, true));
+		
+		chooseBase.setPreferredSize(new Dimension(150, 75));
+		chooseVertical.setPreferredSize(new Dimension(150, 75));
+		chooseHorizontal.setPreferredSize(new Dimension(150, 75));
+		
+		generate.setPreferredSize(new Dimension(450, 75));
+		
+		previewPanel.setPreferredSize(new Dimension(350, 350));
+		previewPanel.setBorder(new LineBorder(Color.GRAY, 2, true));
+		
+		final BufferedImage icon = ImageUtils.load("/icon.png");
+		final JPanel panel = createPanel();
+		final ComponentAdapter resizeAdapter = new ComponentAdapter() {
+			@Override
+			public void componentResized(final ComponentEvent c) {
+				final long now = System.currentTimeMillis();
+				
+				if (now - resizeTimer >= RESIZE_INTERVAL) {
+					resizeTimer = now;
+					
+					resizePreviews();
+				}
+			}
+		};
+		
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setContentPane(panel);
-		frame.setMinimumSize(new Dimension(500, 350));
+		frame.addComponentListener(resizeAdapter);
+		frame.setMinimumSize(new Dimension(850, 450));
+		frame.setPreferredSize(new Dimension(950, 550));
 		frame.pack();
 		frame.setLocationByPlatform(true);
 		frame.setTitle("Tile generator");
+		frame.setIconImage(icon);
 	}
 	
-	private JPanel addComponents() {
+	private void resizePreviews() {
+		final int size = Math.min(previewBase.getWidth(), previewVertical.getHeight()) - PREVIEW_PADDING;
+		
+		Icon iconBase = previewBase.getIcon();
+		Icon iconVertical = previewVertical.getIcon();
+		Icon iconHorizontal = previewHorizontal.getIcon();
+		
+		if (iconBase != null) {
+			final Image imageBase = ((ImageIcon)iconBase).getImage();
+			final Image smallImageBase = imageBase.getScaledInstance(size, size, Image.SCALE_FAST);
+			
+			iconBase = new ImageIcon(smallImageBase);
+			
+			previewBase.setIcon(iconBase);
+		}
+		
+		if (iconVertical != null) {
+			final Image imageVertical = ((ImageIcon)iconVertical).getImage();
+			final Image smallImageVertical = imageVertical.getScaledInstance(size, size, Image.SCALE_FAST);
+			
+			iconVertical = new ImageIcon(smallImageVertical);
+			
+			previewVertical.setIcon(iconVertical);
+		}
+		
+		if (iconHorizontal != null) {
+			final Image imageHorizontal = ((ImageIcon)iconHorizontal).getImage();
+			final Image smallImageHorizontal = imageHorizontal.getScaledInstance(size, size, Image.SCALE_FAST);
+			
+			iconHorizontal = new ImageIcon(smallImageHorizontal);
+			
+			previewHorizontal.setIcon(iconHorizontal);
+		}
+	}
+	
+	private JPanel createPanel() {
 		final JPanel panel = new JPanel();
 		final GridBagConstraints c = new GridBagConstraints();
 		
@@ -128,7 +217,6 @@ public final class TileDialog {
 		
 		c.gridx = 0;
 		c.gridy = 1;
-		c.fill = GridBagConstraints.HORIZONTAL;
 		panel.add(chooseBase, c);
 		
 		c.gridx = 1;
@@ -141,6 +229,13 @@ public final class TileDialog {
 		c.gridy = 2;
 		c.gridwidth = 3;
 		panel.add(generate, c);
+		
+		c.gridx = 3;
+		c.gridy = 0;
+		c.gridwidth = 1;
+		c.gridheight = 3;
+		c.weightx = 5.0;
+		panel.add(previewPanel, c);
 		
 		return panel;
 	}
@@ -177,6 +272,10 @@ public final class TileDialog {
 		}
 		
 		return null;
+	}
+	
+	private void alert(final String message) {
+		JOptionPane.showMessageDialog(frame, message, "Information", JOptionPane.INFORMATION_MESSAGE);
 	}
 	
 	private void writeImages(final BufferedImage[] images, final File folder) {

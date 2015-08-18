@@ -147,7 +147,7 @@ public final class TileConstants {
 		return image;
 	};
 	
-	public static final ITileStrategy[] ALL_TILE_STRATEGYS = {
+	public static final ITileStrategy[] ALL_TILE_STRATEGIES = {
 		BASE,
 		TOP,
 		BOTTOM,
