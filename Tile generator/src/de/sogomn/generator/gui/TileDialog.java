@@ -2,6 +2,7 @@ package de.sogomn.generator.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -33,17 +34,18 @@ public final class TileDialog {
 	private JFrame frame;
 	private JLabel previewBase, previewVertical, previewHorizontal;
 	private JButton chooseBase, chooseVertical, chooseHorizontal;
-	private JButton generate;
+	private JButton generate, save;
 	
 	private JPanel previewPanel;
 	
 	private JFileChooser fileChooser;
 	
 	private ImageSet imageSet;
+	private BufferedImage spriteSheet;
 	
 	private long resizeTimer;
 	
-	private static final int PREVIEW_PADDING = 35;
+	private static final int PREVIEW_PADDING = 25;
 	private static final int RESIZE_INTERVAL = 500;
 	
 	public TileDialog() {
@@ -55,7 +57,23 @@ public final class TileDialog {
 		chooseVertical = new JButton("Choose vertical");
 		chooseHorizontal = new JButton("Choose horizontal");
 		generate = new JButton("Generate");
-		previewPanel = new JPanel();
+		save = new JButton("Save");
+		previewPanel = new JPanel() {
+			private static final long serialVersionUID = -4424492961331659573L;
+			
+			@Override
+			protected void paintComponent(final Graphics g) {
+				final int width = getWidth();
+				final int height = getHeight();
+				final int size = Math.min(width, height) - PREVIEW_PADDING;
+				final int x = width / 2 - size / 2;
+				final int y = height / 2 - size / 2;
+				
+				super.paintComponent(g);
+				
+				g.drawImage(spriteSheet, x, y, size, size, null);
+			}
+		};
 		fileChooser = new JFileChooser();
 		imageSet = new ImageSet();
 		
@@ -63,7 +81,7 @@ public final class TileDialog {
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		
 		chooseBase.addActionListener(a -> {
-			final BufferedImage image = chooseImage();
+			final BufferedImage image = chooseImageFile();
 			
 			if (image != null) {
 				final ImageIcon icon = new ImageIcon(image);
@@ -75,7 +93,7 @@ public final class TileDialog {
 			}
 		});
 		chooseVertical.addActionListener(a -> {
-			final BufferedImage image = chooseImage();
+			final BufferedImage image = chooseImageFile();
 			
 			if (image != null) {
 				final ImageIcon icon = new ImageIcon(image);
@@ -87,7 +105,7 @@ public final class TileDialog {
 			}
 		});
 		chooseHorizontal.addActionListener(a -> {
-			final BufferedImage image = chooseImage();
+			final BufferedImage image = chooseImageFile();
 			
 			if (image != null) {
 				final ImageIcon icon = new ImageIcon(image);
@@ -102,10 +120,23 @@ public final class TileDialog {
 			final BufferedImage[] images = imageSet.generateTiles();
 			
 			if (images != null) {
+				spriteSheet = generateSpriteSheet(images);
+				
+				previewPanel.repaint();
+			}
+		});
+		save.addActionListener(a -> {
+			if (spriteSheet != null) {
 				final File file = chooseSaveFile();
 				
 				if (file != null) {
-					writeImages(images, file);
+					String path = file.getPath();
+					
+					if (!path.toUpperCase().endsWith(".PNG")) {
+						path += ".png";
+					}
+					
+					ImageUtils.write(spriteSheet, path);
 					
 					alert("Sprite sheet saved!");
 				}
@@ -130,12 +161,6 @@ public final class TileDialog {
 		previewHorizontal.setHorizontalAlignment(JLabel.CENTER);
 		previewHorizontal.setBorder(new LineBorder(Color.GRAY, 2, true));
 		
-		chooseBase.setPreferredSize(new Dimension(150, 75));
-		chooseVertical.setPreferredSize(new Dimension(150, 75));
-		chooseHorizontal.setPreferredSize(new Dimension(150, 75));
-		
-		generate.setPreferredSize(new Dimension(450, 75));
-		
 		previewPanel.setPreferredSize(new Dimension(350, 350));
 		previewPanel.setBorder(new LineBorder(Color.GRAY, 2, true));
 		
@@ -150,6 +175,7 @@ public final class TileDialog {
 					resizeTimer = now;
 					
 					resizePreviews();
+					previewPanel.repaint();
 				}
 			}
 		};
@@ -163,6 +189,53 @@ public final class TileDialog {
 		frame.setLocationByPlatform(true);
 		frame.setTitle("Tile generator");
 		frame.setIconImage(icon);
+	}
+	
+	private JPanel createPanel() {
+		final JPanel panel = new JPanel();
+		final GridBagConstraints c = new GridBagConstraints();
+		
+		panel.setLayout(new GridBagLayout());
+		panel.setBorder(new EmptyBorder(0, 3, 0, 3));
+		
+		c.weightx = 1.0;
+		c.weighty = 1.0;
+		c.insets = new Insets(3, 3, 3, 3);
+		c.fill = GridBagConstraints.BOTH;
+		panel.add(previewBase, c);
+		
+		c.gridx = 1;
+		panel.add(previewVertical, c);
+		
+		c.gridx = 2;
+		panel.add(previewHorizontal, c);
+		
+		c.gridx = 0;
+		c.gridy = 1;
+		panel.add(chooseBase, c);
+		
+		c.gridx = 1;
+		panel.add(chooseVertical, c);
+		
+		c.gridx = 2;
+		panel.add(chooseHorizontal, c);
+		
+		c.gridx = 0;
+		c.gridy = 2;
+		c.gridwidth = 2;
+		panel.add(generate, c);
+		
+		c.gridx = 2;
+		c.gridwidth = 1;
+		panel.add(save, c);
+		
+		c.gridx = 3;
+		c.gridy = 0;
+		c.gridheight = 3;
+		c.weightx = 5.0;
+		panel.add(previewPanel, c);
+		
+		return panel;
 	}
 	
 	private void resizePreviews() {
@@ -200,50 +273,6 @@ public final class TileDialog {
 		}
 	}
 	
-	private JPanel createPanel() {
-		final JPanel panel = new JPanel();
-		final GridBagConstraints c = new GridBagConstraints();
-		
-		panel.setLayout(new GridBagLayout());
-		panel.setBorder(new EmptyBorder(0, 3, 0, 3));
-		
-		c.weightx = 1.0;
-		c.weighty = 1.0;
-		c.insets = new Insets(3, 3, 3, 3);
-		c.fill = GridBagConstraints.BOTH;
-		panel.add(previewBase, c);
-		
-		c.gridx = 1;
-		panel.add(previewVertical, c);
-		
-		c.gridx = 2;
-		panel.add(previewHorizontal, c);
-		
-		c.gridx = 0;
-		c.gridy = 1;
-		panel.add(chooseBase, c);
-		
-		c.gridx = 1;
-		panel.add(chooseVertical, c);
-		
-		c.gridx = 2;
-		panel.add(chooseHorizontal, c);
-		
-		c.gridx = 0;
-		c.gridy = 2;
-		c.gridwidth = 3;
-		panel.add(generate, c);
-		
-		c.gridx = 3;
-		c.gridy = 0;
-		c.gridwidth = 1;
-		c.gridheight = 3;
-		c.weightx = 5.0;
-		panel.add(previewPanel, c);
-		
-		return panel;
-	}
-	
 	private File chooseSaveFile() {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("*.png", "PNG"));
 		
@@ -258,7 +287,7 @@ public final class TileDialog {
 		return null;
 	}
 	
-	private BufferedImage chooseImage() {
+	private BufferedImage chooseImageFile() {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("*.png, *.jpg, *.gif", "PNG", "JPG", "GIF"));
 		
 		final int input = fileChooser.showOpenDialog(frame);
@@ -280,21 +309,14 @@ public final class TileDialog {
 		JOptionPane.showMessageDialog(frame, message, "Information", JOptionPane.INFORMATION_MESSAGE);
 	}
 	
-	private void writeImages(final BufferedImage[] images, final File file) {
+	private BufferedImage generateSpriteSheet(final BufferedImage[] images) {
 		final BufferedImage firstImage = images[0];
 		final int width = firstImage.getWidth();
 		final int height = firstImage.getHeight();
 		final int tilesWide = (int)Math.sqrt(TileConstants.ALL_TILE_STRATEGIES.length);
-		
 		final BufferedImage spriteSheet = ImageUtils.toSpriteSheet(width, height, tilesWide, images);
 		
-		String path = file.getPath();
-		
-		if (!path.toUpperCase().endsWith(".PNG")) {
-			path += ".png";
-		}
-		
-		ImageUtils.write(spriteSheet, path);
+		return spriteSheet;
 	}
 	
 	public void show() {
