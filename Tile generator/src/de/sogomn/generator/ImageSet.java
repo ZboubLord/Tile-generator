@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 
 public final class ImageSet {
 	
-	private BufferedImage base, vertical, horizontal;
+	private BufferedImage base, top, bottom, left, right;
 	private BufferedImage innerMask, outerMask;
 	
 	public ImageSet() {
@@ -12,7 +12,7 @@ public final class ImageSet {
 	}
 	
 	public BufferedImage[] generateTiles() {
-		if (base == null || vertical == null || horizontal == null) {
+		if (base == null || top == null || bottom == null || left == null || right == null) {
 			return null;
 		}
 		
@@ -21,7 +21,7 @@ public final class ImageSet {
 		
 		for (int i = 0; i < length; i++) {
 			final ITileStrategy strategy = TileConstants.ALL_TILE_STRATEGIES[i];
-			final BufferedImage image = strategy.generate(base, vertical, horizontal, innerMask, outerMask);
+			final BufferedImage image = strategy.generate(base, top, bottom, left, right, innerMask, outerMask);
 			
 			images[i] = image;
 		}
@@ -33,12 +33,20 @@ public final class ImageSet {
 		this.base = base;
 	}
 	
-	public void setVertical(final BufferedImage vertical) {
-		this.vertical = vertical;
+	public void setTop(final BufferedImage top) {
+		this.top = top;
 	}
 	
-	public void setHorizontal(final BufferedImage horizontal) {
-		this.horizontal = horizontal;
+	public void setBottom(final BufferedImage bottom) {
+		this.bottom = bottom;
+	}
+	
+	public void setLeft(final BufferedImage left) {
+		this.left = left;
+	}
+	
+	public void setRight(final BufferedImage right) {
+		this.right = right;
 	}
 	
 	public void setInnerMask(final BufferedImage innerMask) {
