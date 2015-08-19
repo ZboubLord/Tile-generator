@@ -24,6 +24,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import de.sogomn.generator.ImageSet;
+import de.sogomn.generator.TileConstants;
 import de.sogomn.generator.util.FileUtils;
 import de.sogomn.generator.util.ImageUtils;
 
@@ -57,6 +58,9 @@ public final class TileDialog {
 		previewPanel = new JPanel();
 		fileChooser = new JFileChooser();
 		imageSet = new ImageSet();
+		
+		fileChooser.setCurrentDirectory(new File("/"));
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		
 		chooseBase.addActionListener(a -> {
 			final BufferedImage image = chooseImage();
@@ -98,12 +102,12 @@ public final class TileDialog {
 			final BufferedImage[] images = imageSet.generateTiles();
 			
 			if (images != null) {
-				final File folder = chooseFolder();
+				final File file = chooseSaveFile();
 				
-				if (folder != null) {
-					writeImages(images, folder);
+				if (file != null) {
+					writeImages(images, file);
 					
-					alert("Tiles saved!");
+					alert("Sprite sheet saved!");
 				}
 			}
 		});
@@ -240,9 +244,8 @@ public final class TileDialog {
 		return panel;
 	}
 	
-	private File chooseFolder() {
-		fileChooser.setFileFilter(null);
-		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+	private File chooseSaveFile() {
+		fileChooser.setFileFilter(new FileNameExtensionFilter("*.png", "PNG"));
 		
 		final int input = fileChooser.showSaveDialog(frame);
 		
@@ -256,8 +259,7 @@ public final class TileDialog {
 	}
 	
 	private BufferedImage chooseImage() {
-		fileChooser.setFileFilter(new FileNameExtensionFilter("Image files", "PNG", "JPG", "GIF"));
-		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		fileChooser.setFileFilter(new FileNameExtensionFilter("*.png, *.jpg, *.gif", "PNG", "JPG", "GIF"));
 		
 		final int input = fileChooser.showOpenDialog(frame);
 		
@@ -278,15 +280,21 @@ public final class TileDialog {
 		JOptionPane.showMessageDialog(frame, message, "Information", JOptionPane.INFORMATION_MESSAGE);
 	}
 	
-	private void writeImages(final BufferedImage[] images, final File folder) {
-		final String path = folder + File.separator;
+	private void writeImages(final BufferedImage[] images, final File file) {
+		final BufferedImage firstImage = images[0];
+		final int width = firstImage.getWidth();
+		final int height = firstImage.getHeight();
+		final int tilesWide = (int)Math.sqrt(TileConstants.ALL_TILE_STRATEGIES.length);
 		
-		for (int i = 0; i < images.length; i++) {
-			final BufferedImage image = images[i];
-			final String absolutePath = path + "tile_" + i + ".png";
-			
-			ImageUtils.write(image, absolutePath);
+		final BufferedImage spriteSheet = ImageUtils.toSpriteSheet(width, height, tilesWide, images);
+		
+		String path = file.getPath();
+		
+		if (!path.toUpperCase().endsWith(".PNG")) {
+			path += ".png";
 		}
+		
+		ImageUtils.write(spriteSheet, path);
 	}
 	
 	public void show() {

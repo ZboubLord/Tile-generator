@@ -58,4 +58,24 @@ public final class ImageUtils {
 		}
 	}
 	
+	public static BufferedImage toSpriteSheet(final int tileWidth, final int tileHeight, final int tilesWide, final BufferedImage... images) {
+		final int tilesHigh = images.length / tilesWide;
+		final int width = tilesWide * tileWidth;
+		final int height = tilesHigh * tileHeight;
+		final BufferedImage spriteSheet = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		final Graphics2D g = spriteSheet.createGraphics();
+		
+		for (int i = 0; i < images.length; i++) {
+			final BufferedImage image = images[i];
+			final int x = (i % tilesWide) * tileWidth;
+			final int y = (i / tilesWide) * tileHeight;
+			
+			g.drawImage(image, x, y, null);
+		}
+		
+		g.dispose();
+		
+		return spriteSheet;
+	}
+	
 }
