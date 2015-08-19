@@ -1,6 +1,8 @@
 package de.sogomn.generator.util;
 
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -76,6 +78,35 @@ public final class ImageUtils {
 		g.dispose();
 		
 		return spriteSheet;
+	}
+	
+	public static Area createMask(final BufferedImage mask, final int maskColor) {
+		final Area clip = new Area();
+		
+		for (int x = 0; x < mask.getWidth(); x++) {
+			for (int y = 0; y < mask.getHeight(); y++) {
+				final int rgb = mask.getRGB(x, y);
+				
+				if (rgb == maskColor) {
+					final Area area = new Area(new Rectangle(x, y, 1, 1));
+					
+					clip.add(area);
+				}
+			}
+		}
+		
+		return clip;
+	}
+	
+	public static BufferedImage mask(final BufferedImage image, final Area mask) {
+		final BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
+		final Graphics2D g = result.createGraphics();
+		
+		g.clip(mask);
+		g.drawImage(image, 0, 0, null);
+		g.dispose();
+		
+		return result;
 	}
 	
 }
