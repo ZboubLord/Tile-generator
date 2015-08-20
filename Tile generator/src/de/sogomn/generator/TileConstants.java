@@ -1,6 +1,7 @@
 package de.sogomn.generator;
 
 import static de.sogomn.generator.util.ImageUtils.combine;
+import static de.sogomn.generator.util.ImageUtils.combineAndBlend;
 import static de.sogomn.generator.util.ImageUtils.mask;
 
 import java.awt.Rectangle;
@@ -9,35 +10,35 @@ import java.awt.image.BufferedImage;
 
 public final class TileConstants {
 	
-	public static final ITileStrategy BASE = (base, top, bottom, left, right, innerMask, outerMask) -> {
+	public static final ITileStrategy BASE = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
 		return base;
 	};
 	
-	public static final ITileStrategy TOP = (base, top, bottom, left, right, innerMask, outerMask) -> {
+	public static final ITileStrategy TOP = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
 		final BufferedImage image = combine(base, top);
 		
 		return image;
 	};
 	
-	public static final ITileStrategy BOTTOM = (base, top, bottom, left, right, innerMask, outerMask) -> {
+	public static final ITileStrategy BOTTOM = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
 		final BufferedImage image = combine(base, bottom);
 		
 		return image;
 	};
 	
-	public static final ITileStrategy LEFT = (base, top, bottom, left, right, innerMask, outerMask) -> {
+	public static final ITileStrategy LEFT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
 		final BufferedImage image = combine(base, left);
 		
 		return image;
 	};
 	
-	public static final ITileStrategy RIGHT = (base, top, bottom, left, right, innerMask, outerMask) -> {
+	public static final ITileStrategy RIGHT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
 		final BufferedImage image = combine(base, right);
 		
 		return image;
 	};
 	
-	public static final ITileStrategy TOP_BOTTOM = (base, top, bottom, left, right, innerMask, outerMask) -> {
+	public static final ITileStrategy TOP_BOTTOM = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
 		BufferedImage image = combine(base, bottom);
 		
 		image = combine(image, top);
@@ -45,10 +46,10 @@ public final class TileConstants {
 		return image;
 	};
 	
-	public static final ITileStrategy TOP_LEFT = (base, top, bottom, left, right, innerMask, outerMask) -> {
-		BufferedImage image = combine(base, left);
+	public static final ITileStrategy TOP_LEFT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		final BufferedImage decoration = combineAndBlend(top, left, blending);
 		
-		image = combine(image, top);
+		BufferedImage image = combine(base, decoration);
 		
 		outerMask = clipTop(outerMask);
 		outerMask = clipLeft(outerMask);
@@ -57,10 +58,10 @@ public final class TileConstants {
 		return image;
 	};
 	
-	public static final ITileStrategy TOP_RIGHT = (base, top, bottom, left, right, innerMask, outerMask) -> {
-		BufferedImage image = combine(base, right);
+	public static final ITileStrategy TOP_RIGHT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		final BufferedImage decoration = combineAndBlend(top, right, blending);
 		
-		image = combine(image, top);
+		BufferedImage image = combine(base, decoration);
 		
 		outerMask = clipTop(outerMask);
 		outerMask = clipRight(outerMask);
@@ -69,10 +70,10 @@ public final class TileConstants {
 		return image;
 	};
 	
-	public static final ITileStrategy BOTTOM_LEFT = (base, top, bottom, left, right, innerMask, outerMask) -> {
-		BufferedImage image = combine(base, left);
+	public static final ITileStrategy BOTTOM_LEFT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		final BufferedImage decoration = combineAndBlend(bottom, left, blending);
 		
-		image = combine(image, bottom);
+		BufferedImage image = combine(base, decoration);
 		
 		outerMask = clipBottom(outerMask);
 		outerMask = clipLeft(outerMask);
@@ -81,10 +82,10 @@ public final class TileConstants {
 		return image;
 	};
 	
-	public static final ITileStrategy BOTTOM_RIGHT = (base, top, bottom, left, right, innerMask, outerMask) -> {
-		BufferedImage image = combine(base, right);
+	public static final ITileStrategy BOTTOM_RIGHT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		final BufferedImage decoration = combineAndBlend(bottom, right, blending);
 		
-		image = combine(image, bottom);
+		BufferedImage image = combine(base, decoration);
 		
 		outerMask = clipBottom(outerMask);
 		outerMask = clipRight(outerMask);
@@ -93,19 +94,17 @@ public final class TileConstants {
 		return image;
 	};
 	
-	public static final ITileStrategy LEFT_RIGHT = (base, top, bottom, left, right, innerMask, outerMask) -> {
-		BufferedImage image = combine(base, right);
-		
-		image = combine(image, left);
+	public static final ITileStrategy LEFT_RIGHT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		final BufferedImage decoration = combineAndBlend(left, right, blending);
+		final BufferedImage image = combine(base, decoration);
 		
 		return image;
 	};
 	
-	public static final ITileStrategy TOP_BOTTOM_LEFT = (base, top, bottom, left, right, innerMask, outerMask) -> {
-		BufferedImage image = combine(base, left);
+	public static final ITileStrategy TOP_BOTTOM_LEFT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		final BufferedImage decoration = combineAndBlend(top, combineAndBlend(bottom, left, blending), blending);
 		
-		image = combine(image, bottom);
-		image = combine(image, top);
+		BufferedImage image = combine(base, decoration);
 		
 		outerMask = clipLeft(outerMask);
 		image = mask(image, outerMask);
@@ -113,11 +112,10 @@ public final class TileConstants {
 		return image;
 	};
 	
-	public static final ITileStrategy TOP_BOTTOM_RIGHT = (base, top, bottom, left, right, innerMask, outerMask) -> {
-		BufferedImage image = combine(base, right);
+	public static final ITileStrategy TOP_BOTTOM_RIGHT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		final BufferedImage decoration = combineAndBlend(top, combineAndBlend(bottom, right, blending), blending);
 		
-		image = combine(image, bottom);
-		image = combine(image, top);
+		BufferedImage image = combine(base, decoration);
 		
 		outerMask = clipRight(outerMask);
 		image = mask(image, outerMask);
@@ -125,11 +123,10 @@ public final class TileConstants {
 		return image;
 	};
 	
-	public static final ITileStrategy TOP_LEFT_RIGHT = (base, top, bottom, left, right, innerMask, outerMask) -> {
-		BufferedImage image = combine(base, right);
+	public static final ITileStrategy TOP_LEFT_RIGHT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		final BufferedImage decoration = combineAndBlend(top, combineAndBlend(left, right, blending), blending);
 		
-		image = combine(image, left);
-		image = combine(image, top);
+		BufferedImage image = combine(base, decoration);
 		
 		outerMask = clipTop(outerMask);
 		image = mask(image, outerMask);
@@ -137,11 +134,10 @@ public final class TileConstants {
 		return image;
 	};
 	
-	public static final ITileStrategy BOTTOM_LEFT_RIGHT = (base, top, bottom, left, right, innerMask, outerMask) -> {
-		BufferedImage image = combine(base, right);
+	public static final ITileStrategy BOTTOM_LEFT_RIGHT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		final BufferedImage decoration = combineAndBlend(bottom, combineAndBlend(left, right, blending), blending);
 		
-		image = combine(image, left);
-		image = combine(image, bottom);
+		BufferedImage image = combine(base, decoration);
 		
 		outerMask = clipBottom(outerMask);
 		image = mask(image, outerMask);
@@ -149,12 +145,10 @@ public final class TileConstants {
 		return image;
 	};
 	
-	public static final ITileStrategy TOP_BOTTOM_LEFT_RIGHT = (base, top, bottom, left, right, innerMask, outerMask) -> {
-		BufferedImage image = combine(base, right);
+	public static final ITileStrategy TOP_BOTTOM_LEFT_RIGHT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		final BufferedImage decoration = combineAndBlend(top, combineAndBlend(bottom, combineAndBlend(left, right, blending), blending), blending);
 		
-		image = combine(image, left);
-		image = combine(image, bottom);
-		image = combine(image, top);
+		BufferedImage image = combine(base, decoration);
 		
 		image = mask(image, outerMask);
 		
@@ -177,7 +171,7 @@ public final class TileConstants {
 		TOP_BOTTOM_RIGHT,
 		TOP_LEFT_RIGHT,
 		BOTTOM_LEFT_RIGHT,
-		TOP_BOTTOM_LEFT_RIGHT
+		TOP_BOTTOM_LEFT_RIGHT,
 	};
 	
 	private TileConstants() {

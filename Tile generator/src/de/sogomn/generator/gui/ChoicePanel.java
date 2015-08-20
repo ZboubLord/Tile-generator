@@ -1,6 +1,5 @@
 package de.sogomn.generator.gui;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Image;
@@ -14,7 +13,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import de.sogomn.generator.util.FileUtils;
@@ -34,7 +33,7 @@ final class ChoicePanel {
 	public ChoicePanel(final String name) {
 		panel = new JPanel();
 		preview = new JLabel();
-		button = new JButton(name);
+		button = new JButton("Choose " + name.toLowerCase());
 		fileChooser = new JFileChooser();
 		
 		fileChooser.setCurrentDirectory(new File("/"));
@@ -44,7 +43,7 @@ final class ChoicePanel {
 		preview.setMinimumSize(new Dimension(150, 150));
 		preview.setMaximumSize(new Dimension(150, 150));
 		preview.setHorizontalAlignment(JLabel.CENTER);
-		preview.setBorder(new LineBorder(Color.GRAY, 2, true));
+		preview.setBorder(new TitledBorder(name));
 		preview.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(final ComponentEvent c) {

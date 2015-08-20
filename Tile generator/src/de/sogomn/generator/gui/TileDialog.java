@@ -12,17 +12,20 @@ import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import de.sogomn.generator.ImageSet;
-import de.sogomn.generator.TileConstants;
 import de.sogomn.generator.util.ImageUtils;
 
 
@@ -32,6 +35,7 @@ public final class TileDialog {
 	private ChoicePanel base, top, bottom, left, right;
 	private JButton generate, save;
 	private OuterMaskScrollLabel outerMaskScrollLabel;
+	private JSlider blendSlider;
 	private JPanel previewPanel;
 	
 	private JFileChooser fileChooser;
@@ -47,16 +51,17 @@ public final class TileDialog {
 	public TileDialog() {
 		frame = new JFrame();
 		
-		base = new ChoicePanel("Choose base");
-		top = new ChoicePanel("Choose top");
-		bottom = new ChoicePanel("Choose bottom");
-		left = new ChoicePanel("Choose left");
-		right = new ChoicePanel("Choose right");
+		base = new ChoicePanel("Base");
+		top = new ChoicePanel("Top");
+		bottom = new ChoicePanel("Bottom");
+		left = new ChoicePanel("Left");
+		right = new ChoicePanel("Right");
 		
 		generate = new JButton("Generate");
 		save = new JButton("Save");
 		
 		outerMaskScrollLabel = new OuterMaskScrollLabel();
+		blendSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
 		
 		previewPanel = new JPanel() {
 			private static final long serialVersionUID = -4424492961331659573L;
@@ -81,16 +86,18 @@ public final class TileDialog {
 		fileChooser.setFileFilter(new FileNameExtensionFilter("*.png", "PNG"));
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		
+		blendSlider.setBorder(new TitledBorder("Blending"));
+		
 		generate.addActionListener(a -> {
 			updateImageSet();
 			
-			final BufferedImage[] images = imageSet.generateTiles();
+			spriteSheet = imageSet.generateSpriteSheet();
 			
-			if (images != null) {
-				spriteSheet = generateSpriteSheet(images);
-				
-				previewPanel.repaint();
+			if (spriteSheet == null) {
+				alert("You need at least one base tile!");
 			}
+			
+			previewPanel.repaint();
 		});
 		save.addActionListener(a -> {
 			if (spriteSheet != null) {
@@ -111,7 +118,7 @@ public final class TileDialog {
 		});
 		
 		previewPanel.setPreferredSize(new Dimension(350, 350));
-		previewPanel.setBorder(new LineBorder(Color.GRAY, 2, true));
+		previewPanel.setBorder(new TitledBorder("Preview"));
 		
 		final BufferedImage icon = ImageUtils.load("/icon.png");
 		final JPanel panel = createPanel();
@@ -131,7 +138,7 @@ public final class TileDialog {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setContentPane(panel);
 		frame.addComponentListener(resizeAdapter);
-		frame.setMinimumSize(new Dimension(1350, 450));
+		frame.setMinimumSize(new Dimension(1400, 500));
 		frame.pack();
 		frame.setLocationByPlatform(true);
 		frame.setTitle("Tile generator");
@@ -175,10 +182,16 @@ public final class TileDialog {
 		c.gridx = 5;
 		c.gridy = 0;
 		c.gridwidth = 1;
-		c.gridheight = 3;
+		c.gridheight = 2;
 		panel.add(outerMaskScrollLabel.getLabel(), c);
 		
+		c.gridy = 2;
+		c.gridheight = 1;
+		panel.add(blendSlider, c);
+		
 		c.gridx = 6;
+		c.gridy = 0;
+		c.gridheight = 3;
 		c.weightx = 5.0;
 		panel.add(previewPanel, c);
 		
@@ -194,6 +207,7 @@ public final class TileDialog {
 		
 		if (baseTile != null) {
 			final Area outerMask = outerMaskScrollLabel.getArea(baseTile.getWidth(), baseTile.getHeight());
+			final float blending = (float)blendSlider.getValue() / blendSlider.getMaximum();
 			
 			imageSet.setBase(baseTile);
 			imageSet.setTop(topTile);
@@ -201,6 +215,7 @@ public final class TileDialog {
 			imageSet.setLeft(leftTile);
 			imageSet.setRight(rightTile);
 			imageSet.setOuterMask(outerMask);
+			imageSet.setBlending(blending);
 		}
 	}
 	
@@ -218,16 +233,6 @@ public final class TileDialog {
 	
 	private void alert(final String message) {
 		JOptionPane.showMessageDialog(frame, message, "Information", JOptionPane.INFORMATION_MESSAGE);
-	}
-	
-	private BufferedImage generateSpriteSheet(final BufferedImage[] images) {
-		final BufferedImage firstImage = images[0];
-		final int width = firstImage.getWidth();
-		final int height = firstImage.getHeight();
-		final int tilesWide = (int)Math.sqrt(TileConstants.ALL_TILE_STRATEGIES.length);
-		final BufferedImage spriteSheet = ImageUtils.toSpriteSheet(width, height, tilesWide, images);
-		
-		return spriteSheet;
 	}
 	
 	public void show() {
