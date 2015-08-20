@@ -3,6 +3,7 @@ package de.sogomn.generator.gui;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.Area;
 import java.awt.geom.RoundRectangle2D;
 
@@ -37,7 +38,9 @@ final class OuterMaskScrollLabel extends AbstractScrollLabel {
 		final int y = height / 2 - size / 2;
 		final double rounding = (double)amount / MAX * size;
 		
-		g.setColor(Color.BLACK);
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g.setColor(Color.LIGHT_GRAY);
 		g.fillRoundRect(x, y, size, size, (int)rounding, (int)rounding);
 	}
 	

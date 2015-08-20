@@ -30,6 +30,8 @@ final class ChoicePanel {
 	
 	private BufferedImage tile;
 	
+	private static final int PREVIEW_PADDING = 25;
+	
 	public ChoicePanel(final String name) {
 		panel = new JPanel();
 		preview = new JLabel();
@@ -86,7 +88,7 @@ final class ChoicePanel {
 	}
 	
 	private void resizeIcon() {
-		final int size = Math.min(preview.getWidth(), preview.getHeight());
+		final int size = Math.min(preview.getWidth(), preview.getHeight()) - PREVIEW_PADDING;
 		
 		ImageIcon icon = (ImageIcon)preview.getIcon();
 		

@@ -41,8 +41,8 @@ public final class TileDialog {
 	
 	private long resizeTimer;
 	
-	private static final int PREVIEW_PADDING = 25;
-	private static final int RESIZE_INTERVAL = 500;
+	private static final int PREVIEW_PADDING = 30;
+	private static final int RESIZE_INTERVAL = 450;
 	
 	public TileDialog() {
 		frame = new JFrame();

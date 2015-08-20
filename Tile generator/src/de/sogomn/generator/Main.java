@@ -23,8 +23,8 @@ public final class Main {
 		defaults.put("nimbusBase", new Color(236, 236, 236));
 		defaults.put("control", new Color(238, 238, 238));
 		defaults.put("nimbusFocus", new Color(108, 122, 137));
-		defaults.put("Button.font", new Font("Consolas", Font.BOLD, 15));
-		defaults.put("TitledBorder.font", new Font("Consolas", Font.PLAIN, 12));
+		defaults.put("Button.font", new Font("Consolas", Font.PLAIN, 15));
+		defaults.put("TitledBorder.font", new Font("Consolas", Font.PLAIN, 10));
 	}
 	
 	private static void changeLookAndFeel() {
