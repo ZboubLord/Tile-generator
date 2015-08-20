@@ -83,6 +83,10 @@ public final class ImageUtils {
 	public static Area createMask(final BufferedImage mask, final int maskColor) {
 		final Area clip = new Area();
 		
+		if (mask == null) {
+			return clip;
+		}
+		
 		for (int x = 0; x < mask.getWidth(); x++) {
 			for (int y = 0; y < mask.getHeight(); y++) {
 				final int rgb = mask.getRGB(x, y);

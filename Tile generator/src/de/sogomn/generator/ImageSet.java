@@ -1,14 +1,16 @@
 package de.sogomn.generator;
 
+import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 
 public final class ImageSet {
 	
 	private BufferedImage base, top, bottom, left, right;
-	private BufferedImage innerMask, outerMask;
+	private Area innerMask, outerMask;
 	
 	public ImageSet() {
-		//...
+		innerMask = new Area();
+		outerMask = new Area();
 	}
 	
 	public BufferedImage[] generateTiles() {
@@ -49,11 +51,11 @@ public final class ImageSet {
 		this.right = right;
 	}
 	
-	public void setInnerMask(final BufferedImage innerMask) {
+	public void setInnerMask(final Area innerMask) {
 		this.innerMask = innerMask;
 	}
 	
-	public void setOuterMask(final BufferedImage outerMask) {
+	public void setOuterMask(final Area outerMask) {
 		this.outerMask = outerMask;
 	}
 	

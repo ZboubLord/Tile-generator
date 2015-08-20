@@ -5,19 +5,16 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -26,16 +23,15 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import de.sogomn.generator.ImageSet;
 import de.sogomn.generator.TileConstants;
-import de.sogomn.generator.util.FileUtils;
 import de.sogomn.generator.util.ImageUtils;
+
 
 public final class TileDialog {
 	
 	private JFrame frame;
-	private JLabel previewBase, previewTop, previewBottom, previewLeft, previewRight;
-	private JButton chooseBase, chooseTop, chooseBottom, chooseLeft, chooseRight;
+	private ChoicePanel base, top, bottom, left, right;
 	private JButton generate, save;
-	
+	private OuterMaskScrollLabel outerMaskScrollLabel;
 	private JPanel previewPanel;
 	
 	private JFileChooser fileChooser;
@@ -51,20 +47,16 @@ public final class TileDialog {
 	public TileDialog() {
 		frame = new JFrame();
 		
-		previewBase = new JLabel();
-		previewTop = new JLabel();
-		previewBottom = new JLabel();
-		previewLeft = new JLabel();
-		previewRight = new JLabel();
-		
-		chooseBase = new JButton("Choose base");
-		chooseTop = new JButton("Choose top");
-		chooseBottom = new JButton("Choose bottom");
-		chooseLeft = new JButton("Choose left");
-		chooseRight = new JButton("Choose right");
+		base = new ChoicePanel("Choose base");
+		top = new ChoicePanel("Choose top");
+		bottom = new ChoicePanel("Choose bottom");
+		left = new ChoicePanel("Choose left");
+		right = new ChoicePanel("Choose right");
 		
 		generate = new JButton("Generate");
 		save = new JButton("Save");
+		
+		outerMaskScrollLabel = new OuterMaskScrollLabel();
 		
 		previewPanel = new JPanel() {
 			private static final long serialVersionUID = -4424492961331659573L;
@@ -86,69 +78,12 @@ public final class TileDialog {
 		imageSet = new ImageSet();
 		
 		fileChooser.setCurrentDirectory(new File("/"));
+		fileChooser.setFileFilter(new FileNameExtensionFilter("*.png", "PNG"));
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		
-		chooseBase.addActionListener(a -> {
-			final BufferedImage image = chooseImageFile();
-			
-			if (image != null) {
-				final ImageIcon icon = new ImageIcon(image);
-				
-				imageSet.setBase(image);
-				previewBase.setIcon(icon);
-				
-				resizePreviews();
-			}
-		});
-		chooseTop.addActionListener(a -> {
-			final BufferedImage image = chooseImageFile();
-			
-			if (image != null) {
-				final ImageIcon icon = new ImageIcon(image);
-				
-				imageSet.setTop(image);
-				previewTop.setIcon(icon);
-				
-				resizePreviews();
-			}
-		});
-		chooseBottom.addActionListener(a -> {
-			final BufferedImage image = chooseImageFile();
-			
-			if (image != null) {
-				final ImageIcon icon = new ImageIcon(image);
-				
-				imageSet.setBottom(image);
-				previewBottom.setIcon(icon);
-				
-				resizePreviews();
-			}
-		});
-		chooseLeft.addActionListener(a -> {
-			final BufferedImage image = chooseImageFile();
-			
-			if (image != null) {
-				final ImageIcon icon = new ImageIcon(image);
-				
-				imageSet.setLeft(image);
-				previewLeft.setIcon(icon);
-				
-				resizePreviews();
-			}
-		});
-		chooseRight.addActionListener(a -> {
-			final BufferedImage image = chooseImageFile();
-			
-			if (image != null) {
-				final ImageIcon icon = new ImageIcon(image);
-				
-				imageSet.setRight(image);
-				previewRight.setIcon(icon);
-				
-				resizePreviews();
-			}
-		});
 		generate.addActionListener(a -> {
+			updateImageSet();
+			
 			final BufferedImage[] images = imageSet.generateTiles();
 			
 			if (images != null) {
@@ -175,12 +110,6 @@ public final class TileDialog {
 			}
 		});
 		
-		setPreferences(previewBase);
-		setPreferences(previewTop);
-		setPreferences(previewBottom);
-		setPreferences(previewLeft);
-		setPreferences(previewRight);
-		
 		previewPanel.setPreferredSize(new Dimension(350, 350));
 		previewPanel.setBorder(new LineBorder(Color.GRAY, 2, true));
 		
@@ -194,7 +123,6 @@ public final class TileDialog {
 				if (now - resizeTimer >= RESIZE_INTERVAL) {
 					resizeTimer = now;
 					
-					resizePreviews();
 					previewPanel.repaint();
 				}
 			}
@@ -203,7 +131,7 @@ public final class TileDialog {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setContentPane(panel);
 		frame.addComponentListener(resizeAdapter);
-		frame.setMinimumSize(new Dimension(1200, 400));
+		frame.setMinimumSize(new Dimension(1350, 450));
 		frame.pack();
 		frame.setLocationByPlatform(true);
 		frame.setTitle("Tile generator");
@@ -215,41 +143,25 @@ public final class TileDialog {
 		final GridBagConstraints c = new GridBagConstraints();
 		
 		panel.setLayout(new GridBagLayout());
-		panel.setBorder(new EmptyBorder(0, 3, 0, 3));
+		panel.setBorder(new EmptyBorder(3, 3, 3, 3));
 		
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		c.insets = new Insets(3, 3, 3, 3);
 		c.fill = GridBagConstraints.BOTH;
-		panel.add(previewBase, c);
+		panel.add(base.getPanel(), c);
 		
 		c.gridx = 1;
-		panel.add(previewTop, c);
+		panel.add(top.getPanel(), c);
 		
 		c.gridx = 2;
-		panel.add(previewBottom, c);
+		panel.add(bottom.getPanel(), c);
 		
 		c.gridx = 3;
-		panel.add(previewLeft, c);
+		panel.add(left.getPanel(), c);
 		
 		c.gridx = 4;
-		panel.add(previewRight, c);
-		
-		c.gridx = 0;
-		c.gridy = 1;
-		panel.add(chooseBase, c);
-		
-		c.gridx = 1;
-		panel.add(chooseTop, c);
-		
-		c.gridx = 2;
-		panel.add(chooseBottom, c);
-		
-		c.gridx = 3;
-		panel.add(chooseLeft, c);
-		
-		c.gridx = 4;
-		panel.add(chooseRight, c);
+		panel.add(right.getPanel(), c);
 		
 		c.gridx = 0;
 		c.gridy = 2;
@@ -264,70 +176,41 @@ public final class TileDialog {
 		c.gridy = 0;
 		c.gridwidth = 1;
 		c.gridheight = 3;
+		panel.add(outerMaskScrollLabel.getLabel(), c);
+		
+		c.gridx = 6;
 		c.weightx = 5.0;
 		panel.add(previewPanel, c);
 		
 		return panel;
 	}
 	
-	private void setPreferences(final JLabel label) {
-		label.setPreferredSize(new Dimension(150, 150));
-		label.setMinimumSize(new Dimension(150, 150));
-		label.setMaximumSize(new Dimension(150, 150));
-		label.setHorizontalAlignment(JLabel.CENTER);
-		label.setBorder(new LineBorder(Color.GRAY, 2, true));
-	}
-	
-	private void resizeIcon(final JLabel label) {
-		final int size = Math.min(label.getWidth(), label.getHeight());
+	private void updateImageSet() {
+		final BufferedImage baseTile = base.getTile();
+		final BufferedImage topTile = top.getTile();
+		final BufferedImage bottomTile = bottom.getTile();
+		final BufferedImage leftTile = left.getTile();
+		final BufferedImage rightTile = right.getTile();
 		
-		Icon icon = label.getIcon();
-		
-		if (icon != null) {
-			final Image image = ((ImageIcon)icon).getImage();
-			final Image smallImage = image.getScaledInstance(size, size, Image.SCALE_FAST);
+		if (baseTile != null) {
+			final Area outerMask = outerMaskScrollLabel.getArea(baseTile.getWidth(), baseTile.getHeight());
 			
-			icon = new ImageIcon(smallImage);
-			
-			label.setIcon(icon);
+			imageSet.setBase(baseTile);
+			imageSet.setTop(topTile);
+			imageSet.setBottom(bottomTile);
+			imageSet.setLeft(leftTile);
+			imageSet.setRight(rightTile);
+			imageSet.setOuterMask(outerMask);
 		}
 	}
 	
-	private void resizePreviews() {
-		resizeIcon(previewBase);
-		resizeIcon(previewTop);
-		resizeIcon(previewBottom);
-		resizeIcon(previewLeft);
-		resizeIcon(previewRight);
-	}
-	
 	private File chooseSaveFile() {
-		fileChooser.setFileFilter(new FileNameExtensionFilter("*.png", "PNG"));
-		
 		final int input = fileChooser.showSaveDialog(frame);
 		
 		if (input == JFileChooser.APPROVE_OPTION) {
 			final File file = fileChooser.getSelectedFile();
 			
 			return file;
-		}
-		
-		return null;
-	}
-	
-	private BufferedImage chooseImageFile() {
-		fileChooser.setFileFilter(new FileNameExtensionFilter("*.png, *.jpg, *.gif", "PNG", "JPG", "GIF"));
-		
-		final int input = fileChooser.showOpenDialog(frame);
-		
-		if (input == JFileChooser.APPROVE_OPTION) {
-			final File file = fileChooser.getSelectedFile();
-			
-			if (FileUtils.isImage(file)) {
-				final BufferedImage image = ImageUtils.loadExternal(file);
-				
-				return image;
-			}
 		}
 		
 		return null;
