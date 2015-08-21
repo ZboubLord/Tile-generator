@@ -10,10 +10,12 @@ import java.awt.event.ComponentEvent;
 import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Hashtable;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
@@ -56,8 +58,20 @@ public final class TileDialog {
 		generate = new JButton("Generate");
 		save = new JButton("Save");
 		
+		blendSlider = new JSlider(JSlider.HORIZONTAL, 0, 30, 0);
+		
+		final Hashtable<Integer, JLabel> sliderMap = new Hashtable<Integer, JLabel>();
+		
+		sliderMap.put(0, new JLabel("0"));
+		sliderMap.put(blendSlider.getMaximum() / 2, new JLabel("Max"));
+		sliderMap.put(blendSlider.getMaximum(), new JLabel("0"));
+		
 		outerMaskScrollLabel = new OuterMaskScrollLabel();
-		blendSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
+		blendSlider.setLabelTable(sliderMap);
+		blendSlider.setPaintLabels(true);
+		blendSlider.setMajorTickSpacing(blendSlider.getMaximum() / 2);
+		blendSlider.setMinorTickSpacing(1);
+		blendSlider.setPaintTicks(true);
 		
 		previewPanel = new JPanel() {
 			private static final long serialVersionUID = -4424492961331659573L;
