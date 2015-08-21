@@ -19,7 +19,7 @@ Select additional tile parts
 
 ![Example 3](http://www.bilder-upload.eu/upload/186fae-1440163682.png)
 
-Change roudning and blending   
+Change rounding and blending   
 
 ![Example 4](http://www.bilder-upload.eu/upload/af86da-1440163852.png)
 
