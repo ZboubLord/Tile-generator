@@ -64,15 +64,31 @@ public final class TileDialog {
 			
 			@Override
 			protected void paintComponent(final Graphics g) {
-				final int width = getWidth();
-				final int height = getHeight();
-				final int size = Math.min(width, height) - PREVIEW_PADDING;
-				final int x = width / 2 - size / 2;
-				final int y = height / 2 - size / 2;
-				
 				super.paintComponent(g);
 				
-				g.drawImage(spriteSheet, x, y, size, size, null);
+				if (spriteSheet != null) {
+					int width, height;
+					
+					final int panelWidth = getWidth() - PREVIEW_PADDING;
+					final int panelHeight = getHeight() - PREVIEW_PADDING;
+					final int sheetWidth = spriteSheet.getWidth();
+					final int sheetHeight = spriteSheet.getHeight();
+					final float panelRatio = (float)panelWidth / panelHeight;
+					final float sheetRatio = (float)sheetWidth / sheetHeight;
+					
+					if (sheetRatio > panelRatio) {
+						width = panelWidth;
+						height = (int)(width / sheetRatio);
+					} else {
+						height = panelHeight;
+						width = (int)(height * sheetRatio);
+					}
+					
+					final int x = getWidth() / 2 - width / 2;
+					final int y = getHeight() / 2 - height / 2;
+					
+					g.drawImage(spriteSheet, x, y, width, height, null);
+				}
 			}
 		};
 		fileChooser = new JFileChooser();
@@ -146,11 +162,11 @@ public final class TileDialog {
 		final GridBagConstraints c = new GridBagConstraints();
 		
 		panel.setLayout(new GridBagLayout());
-		panel.setBorder(new EmptyBorder(3, 3, 3, 3));
+		panel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		
-		c.weightx = 1.0;
-		c.weighty = 1.0;
-		c.insets = new Insets(3, 3, 3, 3);
+		c.weightx = 0.1;
+		c.weighty = 0.1;
+		c.insets = new Insets(1, 1, 1, 1);
 		c.fill = GridBagConstraints.BOTH;
 		panel.add(base.getPanel(), c);
 		
@@ -188,7 +204,7 @@ public final class TileDialog {
 		c.gridx = 6;
 		c.gridy = 0;
 		c.gridheight = 3;
-		c.weightx = 5.0;
+		c.weightx = 3.0;
 		panel.add(previewPanel, c);
 		
 		return panel;

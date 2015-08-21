@@ -8,6 +8,8 @@ import java.awt.Rectangle;
 import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 
+import de.sogomn.generator.util.ImageUtils;
+
 public final class TileConstants {
 	
 	public static final ITileStrategy BASE = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
@@ -155,6 +157,38 @@ public final class TileConstants {
 		return image;
 	};
 	
+	public static final ITileStrategy CORNER_TOP_LEFT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		BufferedImage image = ImageUtils.createOverlap(left, top);
+		
+		image = combine(base, image);
+		
+		return image;
+	};
+	
+	public static final ITileStrategy CORNER_TOP_RIGHT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		BufferedImage image = ImageUtils.createOverlap(right, top);
+		
+		image = combine(base, image);
+		
+		return image;
+	};
+	
+	public static final ITileStrategy CORNER_BOTTOM_LEFT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		BufferedImage image = ImageUtils.createOverlap(bottom, left);
+		
+		image = combine(base, image);
+		
+		return image;
+	};
+	
+	public static final ITileStrategy CORNER_BOTTOM_RIGHT = (base, top, bottom, left, right, blending, innerMask, outerMask) -> {
+		BufferedImage image = ImageUtils.createOverlap(bottom, right);
+		
+		image = combine(base, image);
+		
+		return image;
+	};
+	
 	public static final ITileStrategy[] ALL_TILE_STRATEGIES = {
 		BASE,
 		TOP,
@@ -172,6 +206,10 @@ public final class TileConstants {
 		TOP_LEFT_RIGHT,
 		BOTTOM_LEFT_RIGHT,
 		TOP_BOTTOM_LEFT_RIGHT,
+		CORNER_TOP_LEFT,
+		CORNER_TOP_RIGHT,
+		CORNER_BOTTOM_LEFT,
+		CORNER_BOTTOM_RIGHT
 	};
 	
 	private TileConstants() {

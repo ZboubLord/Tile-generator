@@ -1,10 +1,13 @@
 package de.sogomn.generator.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -25,6 +28,7 @@ final class ChoicePanel {
 	
 	private JLabel preview;
 	private JButton button;
+	private TitledBorder border, borderHover;
 	
 	private JFileChooser fileChooser;
 	
@@ -36,20 +40,40 @@ final class ChoicePanel {
 		panel = new JPanel();
 		preview = new JLabel();
 		button = new JButton("Choose " + name.toLowerCase());
+		border = new TitledBorder(name);
+		borderHover = new TitledBorder("Click to clear");
 		fileChooser = new JFileChooser();
 		
 		fileChooser.setCurrentDirectory(new File("/"));
 		fileChooser.setFileFilter(new FileNameExtensionFilter("*.png, *.jpg, *.gif", "PNG", "JPG", "GIF"));
 		
+		borderHover.setTitleColor(Color.RED);
+		
 		preview.setPreferredSize(new Dimension(150, 150));
 		preview.setMinimumSize(new Dimension(150, 150));
 		preview.setMaximumSize(new Dimension(150, 150));
 		preview.setHorizontalAlignment(JLabel.CENTER);
-		preview.setBorder(new TitledBorder(name));
+		preview.setBorder(border);
 		preview.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(final ComponentEvent c) {
 				resizeIcon();
+			}
+		});
+		preview.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(final MouseEvent m) {
+				if (m.getButton() == MouseEvent.BUTTON1) {
+					removeTile();
+				}
+			}
+			@Override
+			public void mouseEntered(final MouseEvent m) {
+				preview.setBorder(borderHover);
+			}
+			@Override
+			public void mouseExited(final MouseEvent m) {
+				preview.setBorder(border);
 			}
 		});
 		
@@ -57,12 +81,7 @@ final class ChoicePanel {
 			final BufferedImage image = chooseImageFile();
 			
 			if (image != null) {
-				final ImageIcon icon = new ImageIcon(image);
-				
-				tile = image;
-				
-				preview.setIcon(icon);
-				resizeIcon();
+				setTile(image);
 			}
 		});
 		
@@ -100,6 +119,20 @@ final class ChoicePanel {
 			
 			preview.setIcon(icon);
 		}
+	}
+	
+	public void removeTile() {
+		tile = null;
+		preview.setIcon(null);
+	}
+	
+	public void setTile(final BufferedImage tile) {
+		this.tile = tile;
+		
+		final ImageIcon icon = new ImageIcon(tile);
+		
+		preview.setIcon(icon);
+		resizeIcon();
 	}
 	
 	public JPanel getPanel() {

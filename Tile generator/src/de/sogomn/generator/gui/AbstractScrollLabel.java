@@ -27,9 +27,9 @@ public abstract class AbstractScrollLabel {
 			}
 		};
 		
-		label.setPreferredSize(new Dimension(150, 150));
-		label.setMinimumSize(new Dimension(150, 150));
-		label.setMaximumSize(new Dimension(150, 150));
+		label.setPreferredSize(new Dimension(175, 175));
+		label.setMinimumSize(new Dimension(175, 175));
+		label.setMaximumSize(new Dimension(175, 175));
 		label.setHorizontalAlignment(JLabel.CENTER);
 		label.setBorder(new LineBorder(Color.GRAY, 2, true));
 		label.addMouseWheelListener(m -> {

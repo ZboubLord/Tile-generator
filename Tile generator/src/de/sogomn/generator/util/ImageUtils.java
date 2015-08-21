@@ -2,7 +2,6 @@ package de.sogomn.generator.util;
 
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -106,34 +105,30 @@ public final class ImageUtils {
 		return spriteSheet;
 	}
 	
-	public static Area createMask(final BufferedImage mask, final int maskColor) {
-		final Area clip = new Area();
-		
-		if (mask == null) {
-			return clip;
-		}
-		
-		for (int x = 0; x < mask.getWidth(); x++) {
-			for (int y = 0; y < mask.getHeight(); y++) {
-				final int rgb = mask.getRGB(x, y);
-				
-				if (rgb == maskColor) {
-					final Area area = new Area(new Rectangle(x, y, 1, 1));
-					
-					clip.add(area);
-				}
-			}
-		}
-		
-		return clip;
-	}
-	
 	public static BufferedImage mask(final BufferedImage image, final Area mask) {
 		final BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(), image.getType());
 		final Graphics2D g = result.createGraphics();
 		
 		g.clip(mask);
 		g.drawImage(image, 0, 0, null);
+		g.dispose();
+		
+		return result;
+	}
+	
+	public static BufferedImage createOverlap(final BufferedImage one, final BufferedImage two) {
+		if (one == null || two == null) {
+			return null;
+		}
+		
+		final int width = Math.max(one.getWidth(), two.getWidth());
+		final int height = Math.max(one.getHeight(), two.getHeight());
+		final BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		final Graphics2D g = result.createGraphics();
+	
+		g.drawImage(one, 0, 0, null);
+		g.setComposite(AlphaComposite.SrcIn);
+		g.drawImage(two, 0, 0, null);
 		g.dispose();
 		
 		return result;
